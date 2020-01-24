@@ -373,7 +373,6 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
             }
 
             $no=0;
-            var_dump($pattern_fptree_all);
             for($i=0;$i<count($pattern_fptree_all);$i++){
                 $id_brg1=$pattern_fptree_all[$i]['item2'];
                 $id_brg2=$pattern_fptree_all[$i]['item1'];
