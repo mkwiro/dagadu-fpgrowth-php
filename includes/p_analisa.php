@@ -10,10 +10,11 @@ function stable_uasort(&$array, $cmp_function) {
     if(count($array) < 2) {
         return;
     }
+    
     $halfway = count($array) / 2;
     $array1 = array_slice($array, 0, $halfway, TRUE); //arrayslice berfungsi mengembalikan fungsi array bagian yg dipilih
     $array2 = array_slice($array, $halfway, NULL, TRUE);
-
+  
     stable_uasort($array1, $cmp_function);
     stable_uasort($array2, $cmp_function);
     if(call_user_func($cmp_function, end($array1), reset($array2)) < 1) {
@@ -137,44 +138,60 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
                 $daftar_tabulasi.='
                 <tr>
                 <td>'.htmlspecialchars($kode_transaksi[$id_transaksi]).'</td>'; //htmlspesial  fungsi mengkonversi beberapa karakter yang telah ditetapkan untuk entitas HTML
-                var_dump($barang);
+                //fetch data barang dengan perulangan dalam setiap transaksi melalui header itemset tabulasi,
                 for($ii=0;$ii<count($barang);$ii++){
-                    
+                //if cek jika ada $barang[$ii] di dalam $transaksi_barang[$id_transaksi] maka
                     if(in_array($barang[$ii], $transaksi_barang[$id_transaksi])){
+                        //apabila barang sudah ditemukan dengan if diatas maka 
                         if(!isset($frekuensi[$barang[$ii]])){$frekuensi[$barang[$ii]]=0;}
+                        //nominal jumlah barangnya ditambah +1
                         $frekuensi[$barang[$ii]]=$frekuensi[$barang[$ii]]+1;
+                        //tanda check list dalam tabel
                         $sts='<i class="fa fa-check"></i>';
                     }else{
+                        //tidak ada tanda cek list dalam tabel
                         $sts='';
                     }
                     $daftar_tabulasi.='<td class="text-center">'.$sts.'</td>';
                 }
                 $daftar_tabulasi.='</tr>'; //tabel data transaksi dan barang
             }
-            
-            $frekuensi_sort_all=array(); //memanggil array yang diatas
+            //variabel $frekuensi_sort_all array untuk menampung frekunesi item yang nanti diurutkan dari yang terbesar
+            $frekuensi_sort_all=array(); 
+            //perulangan untuk fetch data dari header barang yang muncul dari keseluruhan transaksi
             for($i=0;$i<count($barang);$i++){
+                //array barang yang terbeli dan jumlahnya transaksi yang ada barnag tsb dimasukkan ke array $frekuensi_sort_all  
                 $frekuensi_sort_all[]=array($frekuensi[$barang[$i]], $barang[$i]);
             }
-            stable_uasort($frekuensi_sort_all, 'cmp'); //cmp berfungsi membandingkan dua elemen daftar
+            //cmp berfungsi membandingkan dua elemen daftar
+            stable_uasort($frekuensi_sort_all, 'cmp'); 
+            //extract value dari array $frekuensi_sort_all
             $frekuensi_sort_all = array_values($frekuensi_sort_all);
+
+            //ITEM SET SUPPORT var: $frekuensi_sort
+            //menyiapkan variabel $frekuensi_sort sebagai variabel frequent item yang sudah minimum supportnya sesuai
             $frekuensi_sort=array();
+            //for untuk extract satu satu data frequent item
             for($i=0;$i<count($frekuensi_sort_all);$i++){
+                //if $frekuensi_sort_all[$i][0] (jumlah frequent item) lebih dari sama dengan minimum support...
                 if($frekuensi_sort_all[$i][0] >= $nilai_minimum_support){
+                    //maka frequent item dimasukkan ke array  $frekuensi_sort[]
                     $frekuensi_sort[]=$frekuensi_sort_all[$i];
                 }
             }
 
+            //ITEMSET PRIORITY var: $transaksi_barang_priority
+            //Menseleksi transaksi yang mengandung itemset support di dalamanya
             $transaksi_barang_priority=array();
-            for($i=0;$i<count($transaksi);$i++){
+            for($i=0; $i<count($transaksi); $i++){
                 $transaksi_barang_priority[$transaksi[$i]]=array();
-                for($ii=0;$ii<count($frekuensi_sort);$ii++){
+                for($ii=0; $ii<count($frekuensi_sort); $ii++){
                     if(in_array($frekuensi_sort[$ii][1], $transaksi_barang[$transaksi[$i]])){
                         $transaksi_barang_priority[$transaksi[$i]][]=$frekuensi_sort[$ii][1];
                     }
                 }
             }
-
+            //ITEMSET FREQUENT
             $no=0;
             for($i=0;$i<count($frekuensi_sort_all);$i++){
                 $id_brg=$frekuensi_sort_all[$i][1];
@@ -187,6 +204,7 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
                 </tr>
                 ';
             }
+            //ITEM SUPPORT
             $no=0;
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
@@ -199,9 +217,11 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
                 </tr>
                 ';
             }
+            //ITEM SET PRIORITY
             $itemset_priority=array();
             for($i=0;$i<count($transaksi);$i++){
-                $tmp=array();$tmp2=array();
+                $tmp=array();
+                $tmp2=array();
                 for($ii=0;$ii<count($transaksi_barang_priority[$transaksi[$i]]);$ii++){
                     $tmp[]=$nama_barang[$transaksi_barang_priority[$transaksi[$i]][$ii]];
                     $tmp2[]=$transaksi_barang_priority[$transaksi[$i]][$ii];
@@ -214,24 +234,29 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
                 </tr>
                 ';
             }
+
+
             $pattern_base=array();
             $pattern_fptree=array();
+            //FP TREE => CONDITIONAL PATTERN BASE var: $pattern_fptree
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
                 $pattern_base[$id_brg]=array();
                 $pattern_fptree[$id_brg]=array();
                 $pattern=array();
                 $pattern2=array();
+                
             for($ii=0;$ii<count($transaksi);$ii++){
                     $pattern_tmp=array();
-                    if(in_array($id_brg, $itemset_priority[$transaksi[$ii]])){ //in array memeriksa nilai, dan mengembalikan nilai true jika nilai ditemukan
+                    //if in array $itemset_priority[$transaksi[$ii]] ada $id_barang
+                    if(in_array($id_brg, $itemset_priority[$transaksi[$ii]])){ 
                         for($iii=0;$iii<count($itemset_priority[$transaksi[$ii]]);$iii++){
                             if($itemset_priority[$transaksi[$ii]][$iii]==$id_brg){
                                 break;
                             }else{
                                 $pattern_tmp[]=$itemset_priority[$transaksi[$ii]][$iii];
+                                //mengecek nilai menggunakan array key, mengembalikan jika nilai true ada dan false jika kunci tidak ada
                                 if(array_key_exists($itemset_priority[$transaksi[$ii]][$iii], $pattern_fptree[$id_brg])){
-                                    //array key berfungsi mengecek nilai, mengembalikan jika nilai true ada dan false jika kunci tidak ada
                                     $pattern_fptree[$id_brg][$itemset_priority[$transaksi[$ii]][$iii]]['count']=$pattern_fptree[$id_brg][$itemset_priority[$transaksi[$ii]][$iii]]['count']+1;
                                 }else{
                                     $pattern_fptree[$id_brg][$itemset_priority[$transaksi[$ii]][$iii]]=array('count'=>1);
@@ -257,8 +282,7 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
                 }
 
             }
-
-
+            //FREQUENT PATTERN
             $pattern_fptree_all=array();
             $arr=$pattern_fptree;
             for($i=0;$i<count($frekuensi_sort);$i++){
@@ -266,15 +290,14 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
                 if(isset($arr[$id_brg]) and count($arr[$id_brg])>0){
                     $p=$arr[$id_brg];
                     $arr2=array();
-                    foreach($p as $id => $value) { //perulangan khusus untuk pembacaan nilai array.s
+                    foreach($p as $id => $value) { //perulangan khusus untuk nilai array.s
                         $arr2[]=array('item1'=>$id, 'item2'=>$id_brg, 'count'=>$value['count']);
                         $pattern_fptree_all[]=array('item1'=>$id, 'item2'=>$id_brg, 'count'=>$value['count']);
-
                     }
                     $pattern_fptree[$id_brg]=$arr2;
                 }
             }
-
+            //CONDITIONAL PATTERN BASE
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
                 if(isset($pattern_base[$id_brg]) and count($pattern_base[$id_brg])>0){
@@ -299,8 +322,7 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
 
                 }
             }
-
-
+            //CONDITIONAL FP TREE
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
                 if(isset($pattern_fptree[$id_brg]) and count($pattern_fptree[$id_brg])>0){
@@ -314,7 +336,7 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
                     $pattern_label='';
                     if(count($pattern_nama) > 0){
                         $pattern_label='{'.implode(', ', $pattern_nama).'}';
-                        //implode berfungsi menggabungkan kembali string yang telah dipecahkan
+                        //implode berfungsi menggabungkan kembali string
                     }
                     $daftar_conditional_fptree.='
                     <tr>
@@ -324,7 +346,7 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
                     ';
                 }
             }
-
+            //FREQUENT PATTERN
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
                 if(isset($pattern_fptree[$id_brg]) and count($pattern_fptree[$id_brg])>0){
@@ -351,9 +373,11 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
             }
 
             $no=0;
+            var_dump($pattern_fptree_all);
             for($i=0;$i<count($pattern_fptree_all);$i++){
                 $id_brg1=$pattern_fptree_all[$i]['item2'];
                 $id_brg2=$pattern_fptree_all[$i]['item1'];
+                //pembulatan nilai support dan confidence sampai 2 digit dibelakang koma
                 $nilai_support=round($pattern_fptree_all[$i]['count'] / $jumlah_transaksi, 2);
                 $nilai_confidence=round($pattern_fptree_all[$i]['count'] / $frekuensi[$id_brg1], 2);
                 if($nilai_confidence >= $nilai_minimum_confidence and $pattern_fptree_all[$i]['count'] >= $nilai_minimum_support){
