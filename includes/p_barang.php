@@ -1,8 +1,5 @@
 <?php if(!defined('fpgrowthdagadu')){ exit(); }?>
 <?php
-if(!isset($_SESSION['LOGIN_ID'])){
-	exit("<script>location.href='".$urlaplikasi."';</script>");
-}
 $link_list=$urlaplikasi.'index.php?=barang';
 $link_update=$urlaplikasi.'index.php?=update_barang';
 
