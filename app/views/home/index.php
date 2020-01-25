@@ -1,7 +1,6 @@
 <div class="main" style=" margin-left: 200px">
 <!-- PROSES PEMASUKAN DATA DARI TABEL SIPANDU KE TABEL FPGROWTH -->
-<?php 
-var_dump($_POST);
+<?php
 if(isset($_POST['submit'])){ 
     $servername = "localhost";
     $username = "root";
