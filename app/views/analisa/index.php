@@ -453,21 +453,20 @@ $(document).ready(function() {
     <div class="form-group">
         <label for="dari" class="col-sm-3 control-label">dari:<span class="text-danger">*</span></label>
         <div class="col-sm-7">
-            <input type="date" class="form-control" id="dari" name="dari">
+            <input type="date" class="form-control" id="dari" name="dari" value="<?=$_POST['dari'];?>">
         </div>
     </div>
-
     <div class="form-group">
         <label for="sampai" class="col-sm-3 control-label">sampai:<span class="text-danger">*</span></label>
         <div class="col-sm-7">
-            <input type="date" class="form-control" id="sampai" name="sampai">
+            <input type="date" class="form-control" id="sampai" name="sampai" value="<?=$_POST['sampai'];?>">
         </div>
     </div>
             <div class="form-group">
                 <label for="minimum_support" class="col-sm-3 control-label">Min Support <span class="text-danger">*</span></label>
                 <div class="col-sm-7">
                     <div class="input-group">
-                        <input type="text" class="form-control" id="minimum_support" name="minimum_support" value="<?php echo htmlspecialchars($minimum_support);?>" required>
+                        <input type="text" class="form-control" id="minimum_support" name="minimum_support" value="<?= htmlspecialchars($minimum_support);?>">
                         <div class="input-group-prepend">
                             <span class="input-group-text" id="basic-addon1">%</span>
                         </div>
@@ -478,7 +477,7 @@ $(document).ready(function() {
                 <label for="minimum_confidence" class="col-sm-3 control-label">Min Confidence <span class="text-danger">*</span></label>
                 <div class="col-sm-7">
                     <div class="input-group">
-                        <input type="text" class="form-control" id="minimum_confidence" name="minimum_confidence" value="<?php echo htmlspecialchars($minimum_confidence);?>" required>
+                        <input type="text" class="form-control" id="minimum_confidence" name="minimum_confidence" value="<?= htmlspecialchars($minimum_confidence);?>">
                         <div class="input-group-prepend">
                             <span class="input-group-text" id="basic-addon1">%</span>
                         </div>
@@ -493,12 +492,9 @@ $(document).ready(function() {
     </div>
 </form>
 </div>
-
 <?php 
 if(isset($_POST['submit']) and $error==''){
 ?>
-
-
 <!-- TAMPILAN -->
 <div class="mt-5" style=" margin-left: 200px">
 <div class="row">
