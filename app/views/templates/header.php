@@ -39,7 +39,7 @@
 <body>
 <div class="sidenav">
   <a style="background-color: red"><?= $data['judul'];?></a>
-  <a href="#">Transaksi</a>
-  <a href="#">Barang</a>
-  <a href="#">Analisis</a>
+  <a href="<?=BASEURL;?>transaksi">Transaksi</a>
+  <a href="<?=BASEURL;?>barang">Barang</a>
+  <a href="<?=BASEURL;?>analisa">Analisis</a>
 </div>

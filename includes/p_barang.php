@@ -5,9 +5,7 @@ $link_update=$urlaplikasi.'index.php?=update_barang';
 
 $error='';
 $daftar='';
-
-$no=0;
-					
+$no=0;					
 // Buat query untuk menampilkan data barang sesuai limit yang ditentukan
 $q=mysqli_query($con,"SELECT * FROM tb_barang_fpgrowth order by id_brg"); //memberikan perintah query ke mysqlserver
 if(mysqli_num_rows($q) > 0){ //mendapatkan jumlah baris query yg dihasilkan oleh mysql_query
@@ -32,10 +30,6 @@ if(mysqli_num_rows($q) > 0){ //mendapatkan jumlah baris query yg dihasilkan oleh
 </div>
 <div class="row">
 	<div class="col-lg-12">
-
-		<div class="form-inline">
-		<div class="form-group"><a href="<?php echo $link_update;?>" class="btn btn-sm btn-primary"><span class="fas fa-plus fa-sm"></span> Tambah Data</a></div>
-		</div>
 
 		<div style="height:10px;clear:both;"></div>
 		<table class="table table-striped table-hover table-bordered">
