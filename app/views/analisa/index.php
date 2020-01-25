@@ -73,16 +73,35 @@ $daftar_frequent_itemset='';
 $daftar_rule='';    
 
 #PROSES PERHITUNGAN#
+if(isset($_POST['reset'])){
+    var_dump(isset($_POST['reset']));
+    $q=mysqli_query($con, "DELETE FROM tb_barang_fpgrowth");
+    $q2=mysqli_query($con, "DELETE FROM tb_transaksi_fpgrowth");
+    $q3=mysqli_query($con, "DELETE FROM tb_transaksi_detail");
+}
 if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik maka"
+  //masukkan data ke database
+  var_dump($_POST['dari']);
+  $q=mysqli_query($con, "INSERT INTO tb_barang_fpgrowth(id_brg, kode_barang, nama_barang) SELECT b2_id, sing_b2, nama_b2 FROM b2");
+  $q2=mysqli_query($con, "INSERT INTO tb_transaksi_fpgrowth(kode_transaksi) SELECT DISTINCT transaksi_id FROM tb_stok WHERE tb_stok.tgl      BETWEEN CAST('".$_POST['dari']."' AS DATE) AND CAST('".$_POST['sampai']."' AS DATE)");
+  $q3=mysqli_query($con, "INSERT INTO tb_transaksi_detail(id_transaksi, id_brg)
+      SELECT tb_transaksi_fpgrowth.id_transaksi, LPAD(b2.b2_id, 2, 0)
+      FROM tb_stok INNER JOIN tb_transaksi_fpgrowth ON tb_stok.transaksi_id = tb_transaksi_fpgrowth.kode_transaksi
+      JOIN tb_barang ON tb_stok.kode_barang=tb_barang.kode_barang 
+      JOIN b2 ON b2.b2_id=tb_barang.b2");
+
+    $result=mysqli_query($con,"SELECT id_transaksi FROM tb_transaksi_detail"); //mengambil nilai jumlah transaksi 
+    $jumlah_transaksi=mysqli_num_rows($result);
+
+
 	$time_before = microtime(true); //untuk menghitung waktu
-	$jumlah_transaksi=$_POST['jumlah_transaksi']; //mengambil nilai jumlah transaksi yang sudah diinputkan
 	$minimum_support=$_POST['minimum_support']; //mengambil nilai minimum support yang sudah diinputkan 
 	$nilai_minimum_support=round(($minimum_support/100)*$jumlah_transaksi, 2); //round berfungsi untuk pembulatan desimal dengan parameternya 2
 	$minimum_confidence=$_POST['minimum_confidence']; //mengambil nilai minimum confidence yang sudah diinputkan 
 	$nilai_minimum_confidence=round($minimum_confidence/100, 2); //round berfungsi untuk pembulatan desimal dengan parameternya 2
-	
+    
 	//mulai perhitungan
-	if(empty($minimum_support) or empty($minimum_confidence) or empty($jumlah_transaksi)){
+	if(empty($minimum_support) or empty($minimum_confidence)){
 		$error='Lengkapi form di bawah ini.';
         //jika pada form inputan terdapat yang kosong atau tidak diisi maka akan muncul pesan error.
 	} else {
@@ -93,7 +112,7 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
         $total_transaksi=(int)$h['jml'];
         
 		if($jumlah_transaksi > $total_transaksi){
-			$error='Jumlah transaksi terlalu banyak.'; //error jika inputan melebihi data transaksi yang ada
+			$error='Jumlah transaksi berbeda'; //error jika inputan melebihi data transaksi yang ada
 		} else {
             $transaksi=array();
             $kode_transaksi=array();
@@ -424,20 +443,26 @@ $(document).ready(function() {
     } ).draw();
 } );
 </script>
+
 <!-- FORM INPUT MIN SUPPORT, MIN CONFIDENCE, DAN JUMLAH DATA -->
-<?php
-if(!empty($error)){
-    echo '
-       <div class="alert alert-danger ">
-          <strong>ERROR -</strong> '.$error.'
-       </div>
-    ';
-}
-?>
+
 <div class="mt-5" style=" margin-left: 200px">
-<form action="<?php echo $link_list;?>" name="" method="post" class="form-horizontal">
+<form action="<?php echo $link_list;?>"method="post" class="form-horizontal">
 <div class="row">
     <div class="col-lg-12">
+    <div class="form-group">
+        <label for="dari" class="col-sm-3 control-label">dari:<span class="text-danger">*</span></label>
+        <div class="col-sm-7">
+            <input type="date" class="form-control" id="dari" name="dari">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="sampai" class="col-sm-3 control-label">sampai:<span class="text-danger">*</span></label>
+        <div class="col-sm-7">
+            <input type="date" class="form-control" id="sampai" name="sampai">
+        </div>
+    </div>
             <div class="form-group">
                 <label for="minimum_support" class="col-sm-3 control-label">Min Support <span class="text-danger">*</span></label>
                 <div class="col-sm-7">
@@ -460,15 +485,12 @@ if(!empty($error)){
                     </div>
                 </div>
             </div>
-            <div class="form-group">
-                <label for="jumlah_transaksi" class="col-sm-3 control-label">Jumlah Transaksi <span class="text-danger">*</span></label>
-                <div class="col-sm-7">
-                    <input type="text" class="form-control" id="jumlah_transaksi" name="jumlah_transaksi" value="<?php echo htmlspecialchars($jumlah_transaksi);?>" required>
-                </div>
-            </div>  
     </div>
 </div>
-    <button name="submit" id="submit" type="submit" class="btn btn-primary" style="margin-left: 50%">Proses</button>
+    <div class="col-sm-7">
+        <button name="submit" id="submit" type="submit" class="btn btn-primary">Proses</button>
+        <button name="reset" id="reset" type="submit" class="btn btn-danger">Reset</button>
+    </div>
 </form>
 </div>
 

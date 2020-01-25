@@ -2,6 +2,7 @@
 <!-- PROSES PEMASUKAN DATA DARI TABEL SIPANDU KE TABEL FPGROWTH -->
 <?php
 if(isset($_POST['submit'])){ 
+    var_dump($_POST);
     $servername = "localhost";
     $username = "root";
     $password = "";
