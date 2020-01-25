@@ -90,8 +90,10 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
       JOIN tb_barang ON tb_stok.kode_barang=tb_barang.kode_barang 
       JOIN b2 ON b2.b2_id=tb_barang.b2");
 
-    $result=mysqli_query($con,"SELECT id_transaksi FROM tb_transaksi_detail"); //mengambil nilai jumlah transaksi 
-    $jumlah_transaksi=mysqli_num_rows($result);
+
+    $q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth"); //menghitung jumlah dari tb_transaksi disimpan pada var. q
+    $h=mysqli_fetch_array($q); //menampilkan data mysql 
+    $jumlah_transaksi=(int)$h['jml'];
 
 
 	$time_before = microtime(true); //untuk menghitung waktu
@@ -110,7 +112,8 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
         $h=mysqli_fetch_array($q); //menampilkan data mysql 
         
         $total_transaksi=(int)$h['jml'];
-        
+        var_dump($total_transaksi);
+        var_dump($jumlah_transaksi);
 		if($jumlah_transaksi > $total_transaksi){
 			$error='Jumlah transaksi berbeda'; //error jika inputan melebihi data transaksi yang ada
 		} else {
@@ -407,7 +410,7 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
                     $daftar_rule.='
                     <tr>
                     <td class="text-center">'.$no.'</td>
-                    <td>Jika Anda membeli '.htmlspecialchars($nama_barang[$id_brg1]).', maka membeli '.htmlspecialchars($nama_barang[$id_brg2]).'</td>
+                    <td>Jika Konsumen membeli '.htmlspecialchars($nama_barang[$id_brg1]).', maka membeli '.htmlspecialchars($nama_barang[$id_brg2]).'</td>
                     <td class="text-center">'.$nilai_support.'</td>
                     <td class="text-center">'.$nilai_confidence.'</td>
                     </tr>
@@ -445,7 +448,15 @@ $(document).ready(function() {
 </script>
 
 <!-- FORM INPUT MIN SUPPORT, MIN CONFIDENCE, DAN JUMLAH DATA -->
-
+<?php
+if(!empty($error)){
+    echo '
+       <div class="alert alert-danger ">
+          <strong>ERROR -</strong> '.$error.'
+       </div>
+    ';
+}
+?>
 <div class="mt-5" style=" margin-left: 200px">
 <form action="<?php echo $link_list;?>"method="post" class="form-horizontal">
 <div class="row">
@@ -453,13 +464,13 @@ $(document).ready(function() {
     <div class="form-group">
         <label for="dari" class="col-sm-3 control-label">dari:<span class="text-danger">*</span></label>
         <div class="col-sm-7">
-            <input type="date" class="form-control" id="dari" name="dari" value="<?=$_POST['dari'];?>">
+            <input type="date" class="form-control" id="dari" name="dari">
         </div>
     </div>
     <div class="form-group">
         <label for="sampai" class="col-sm-3 control-label">sampai:<span class="text-danger">*</span></label>
         <div class="col-sm-7">
-            <input type="date" class="form-control" id="sampai" name="sampai" value="<?=$_POST['sampai'];?>">
+            <input type="date" class="form-control" id="sampai" name="sampai">
         </div>
     </div>
             <div class="form-group">
