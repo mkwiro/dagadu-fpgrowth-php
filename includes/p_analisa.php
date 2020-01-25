@@ -1,8 +1,5 @@
 <?php if(!defined('fpgrowthdagadu')){ exit(); }?>
 <?php 
-if(!isset($_SESSION['LOGIN_ID'])){ //isset berfungsi untuk memeriksa suatu objek dari nilai inputan form
-	exit("<script>location.href='".$urlaplikasi."';</script>");
-}
 
 function stable_uasort(&$array, $cmp_function) { 
 /*mengurutkan array sedemikian rupa sehingga indeks array mempertahankan korelasinya
