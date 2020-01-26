@@ -88,11 +88,7 @@ $q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl DESC L
 $sampaitgl=mysqli_fetch_array($q);
 //cek sudah ada data yang ada di dalam database? kalau ada, dari dan sampainya dimatikan 
 
-if($jumlah_data > 0){
-    $disable="disabled";
-}
 #PROSES PERHITUNGAN#
-
 if(isset($_POST['reset'])){ //Jika ditekan tombol reset; mereset semua data yang ada dalam database
     $disable="";
     $q=mysqli_query($con, "DELETE FROM tb_barang_fpgrowth");
@@ -113,13 +109,14 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
     $h=mysqli_fetch_array($q); //menampilkan data mysql 
     $jumlah_transaksi=(int)$h['jml'];
 
-    //Mengambil data dari tanggal dan sampai tanggal dari database
-    $q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl ASC LIMIT 1");
-    $daritgl=mysqli_fetch_array($q);
-    $q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl DESC LIMIT 1");
-    $sampaitgl=mysqli_fetch_array($q);
+    //Mengambil data dari tanggal dan sampai tanggal dari database untuk jumbotron
+    // $q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl ASC LIMIT 1");
+    // $daritgl=mysqli_fetch_array($q);
+    // $q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl DESC LIMIT 1");
+    // $sampaitgl=mysqli_fetch_array($q);
 
-
+    $daritgl=$_POST['dari'];
+    $sampaitgl=$_POST['sampai'];
 	$time_before = microtime(true); //untuk menghitung waktu
 	$minimum_support=$_POST['minimum_support']; //mengambil nilai minimum support yang sudah diinputkan 
 	$nilai_minimum_support=round(($minimum_support/100)*$jumlah_transaksi, 2); //round berfungsi untuk pembulatan desimal dengan parameternya 2
@@ -466,19 +463,9 @@ $(document).ready(function() {
     } ).draw();
 } );
 </script>
-
 <!-- FORM INPUT MIN SUPPORT, MIN CONFIDENCE, DAN JUMLAH DATA -->
-<?php
-if(!empty($error)){
-    echo '
-       <div class="alert alert-danger ">
-          <strong>ERROR -</strong> '.$error.'
-       </div>
-    ';
-}
-?>
-<!-- JUMBOTRON -->
 <div class="jumbotron" style=" margin-left: 200px">
+<!-- JUMBOTRON -->
   <h1 class="display-4">Sugeng Rawuh!!</h1>
   <p class="lead">dateng fitur analisis pola pembelian konsumen PT Aseli Dagadu Djokdja.</p>
   <hr class="my-2">
@@ -491,11 +478,19 @@ if($jumlah_data>0){?>
     <p class="border border-primary p-2"><span class="badge badge-primary">masukkan range data yang akan dianalisa</span> diikuti dengan <span  class="badge badge-primary">support dan confidencenya.</span></p>
 <?php }else{ ?>
     <p>status memori: <span class="badge badge-danger">terisi</span></p>
-    <p class="border border-dark p-2">Tuan/Puan sedang menganalisa <span class="badge badge-secondary"><?=$jumlah_transaksi;?></span> transaksi dari <span class="badge badge-secondary"><?=$daritgl['tgl'];?></span> sampai <span class="badge badge-secondary"><?=$sampaitgl['tgl'];?></span> dengan minimum support sebesar <span class="badge badge-secondary"><?=$_POST['minimum_support'];?>%</span> dan minimum confidence sebesar <span class="badge badge-secondary"><?=$_POST['minimum_confidence']?>%</span>.</p>
+    <p class="border border-dark p-2">Tuan/Puan sedang menganalisa <span class="badge badge-secondary"><?=$jumlah_transaksi;?></span> transaksi dari <span class="badge badge-secondary"><?=$daritgl;?></span> sampai <span class="badge badge-secondary"><?=$sampaitgl;?></span> dengan minimum support sebesar <span class="badge badge-secondary"><?=$_POST['minimum_support'];?>%</span> dan minimum confidence sebesar <span class="badge badge-secondary"><?=$_POST['minimum_confidence']?>%</span>.</p>
     <p class="border border-danger p-2">Tekan <span class="badge badge-danger" name="reset" id="reset" type="submit"> Reset </span> untuk mengosongkan memori dan reinput data</p>
 <?php };?>
 </div>
-
+<?php 
+if(!empty($error)){ 
+    echo '
+       <div class="alert alert-danger " style=" margin-left: 200px">
+          <strong>ERROR -</strong> '.$error.'
+       </div>
+    ';
+}
+?>
 <!-- INPUT DATA BASE dan MIN SUP DAN MIN CON -->
 <div class="mt-2" style=" margin-left: 200px">
 <form action="<?php echo $link_list;?>"method="post" class="form-horizontal">
@@ -504,13 +499,13 @@ if($jumlah_data>0){?>
     <div class="form-group">
         <label for="dari" class="col-sm-3 control-label">dari:<span class="text-danger">*</span></label>
         <div class="col-sm-7">
-            <input type="date" class="form-control" id="dari" name="dari" <?= $disable;?>>
+            <input type="date" class="form-control" id="dari" name="dari" value="<?=date($daritgl) ?>" <?= $disable;?>>
         </div>
     </div>
     <div class="form-group">
         <label for="sampai" class="col-sm-3 control-label">sampai:<span class="text-danger">*</span></label>
         <div class="col-sm-7">
-            <input type="date" class="form-control" id="sampai" name="sampai" <?= $disable;?>>
+            <input type="date" class="form-control" id="sampai" name="sampai" value="<?=date($sampaitgl) ?>" <?= $disable;?>>
         </div>
     </div>
             <div class="form-group">
