@@ -18,7 +18,7 @@
                     <tr>
                     <td class="text-center"><?= $barang['0']; ?></td>
                     <td><?= $barang['1']; ?></td>
-                    <td><?= $barang['1']; ?></td>
+                    <td><?= $barang['2']; ?></td>
                     </tr>
                 <?php endforeach; ?>
 			</tbody>

@@ -17,9 +17,10 @@ public $database = "test";
     }
     public function AllBarang()
     {
-        $result = $this->conn->query("SELECT * FROM tb_barang_fpgrowth order by id_brg");
+        $result = $this->conn->query("SELECT b2_id, sing_b2, nama_b2 FROM b2 order by b2_id");
             while($row=mysqli_fetch_array($result)){
-                $AllBarang[]=$row; 
+                $AllBarang[]=$row;
+                
             }
         return $AllBarang;
         }

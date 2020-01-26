@@ -1,4 +1,5 @@
 <?php
+//koneksi database
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -8,6 +9,7 @@ $database = "test";
         echo "Failed to connect to MySQL: " . mysqli_connect_error();
         exit();
          }
+
 function stable_uasort(&$array, $cmp_function) { 
 /*mengurutkan array sedemikian rupa sehingga indeks array mempertahankan korelasinya
  dengan elemen array yang terkait dengannya, menggunakan fungsi perbandingan yang ditentukan pengguna.*/
@@ -70,24 +72,42 @@ $daftar_itemset_priority='';
 $daftar_conditional_pattern_base='';
 $daftar_conditional_fptree='';
 $daftar_frequent_itemset='';
-$daftar_rule='';    
+$daftar_rule='';
+$disable='';
+$daritgl='';
+$sampaitgl='';  
 
+$q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth"); //menghitung jumlah dari tb_transaksi disimpan pada var. q
+$h=mysqli_fetch_array($q); //menampilkan data mysql 
+$jumlah_data=(int)$h['jml'];
+
+//cek sudah ada data yang ada di dalam database? untuk jumbotron; 
+$q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl ASC LIMIT 1");
+$daritgl=mysqli_fetch_array($q);
+$q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl DESC LIMIT 1");
+$sampaitgl=mysqli_fetch_array($q);
+//cek sudah ada data yang ada di dalam database? kalau ada, dari dan sampainya dimatikan 
+
+if($jumlah_data > 0){
+    $disable="disabled";
+}
 #PROSES PERHITUNGAN#
+
 if(isset($_POST['reset'])){ //Jika ditekan tombol reset; mereset semua data yang ada dalam database
+    $disable="";
     $q=mysqli_query($con, "DELETE FROM tb_barang_fpgrowth");
     $q2=mysqli_query($con, "DELETE FROM tb_transaksi_fpgrowth");
     $q3=mysqli_query($con, "DELETE FROM tb_transaksi_detail");
 }
-if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik maka"
-  //masukkan data ke tabel-tabel analisa fp growth
+if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
+    $disable="disabled";
   $q=mysqli_query($con, "INSERT INTO tb_barang_fpgrowth(id_brg, kode_barang, nama_barang) SELECT b2_id, sing_b2, nama_b2 FROM b2");
-  $q2=mysqli_query($con, "INSERT INTO tb_transaksi_fpgrowth(kode_transaksi, tgl) SELECT DISTINCT transaksi_id, tgl FROM tb_stok WHERE tb_stok.tgl BETWEEN CAST('".$_POST['dari']."' AS DATE) AND CAST('".$_POST['sampai']."' AS DATE)");
+  $q2=mysqli_query($con, "INSERT INTO tb_transaksi_fpgrowth(kode_transaksi, tgl) SELECT DISTINCT transaksi_id, tgl FROM tb_stok WHERE tb_stok.tgl BETWEEN     CAST('".$_POST['dari']."' AS DATE) AND CAST('".$_POST['sampai']."' AS DATE)");
   $q3=mysqli_query($con, "INSERT INTO tb_transaksi_detail(id_transaksi, id_brg)
       SELECT tb_transaksi_fpgrowth.id_transaksi, LPAD(b2.b2_id, 2, 0)
       FROM tb_stok INNER JOIN tb_transaksi_fpgrowth ON tb_stok.transaksi_id = tb_transaksi_fpgrowth.kode_transaksi
       JOIN tb_barang ON tb_stok.kode_barang=tb_barang.kode_barang 
       JOIN b2 ON b2.b2_id=tb_barang.b2");
-
     //menghitung jumlah transaksi
     $q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth"); //menghitung jumlah dari tb_transaksi disimpan pada var. q
     $h=mysqli_fetch_array($q); //menampilkan data mysql 
@@ -105,7 +125,6 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
 	$nilai_minimum_support=round(($minimum_support/100)*$jumlah_transaksi, 2); //round berfungsi untuk pembulatan desimal dengan parameternya 2
 	$minimum_confidence=$_POST['minimum_confidence']; //mengambil nilai minimum confidence yang sudah diinputkan 
 	$nilai_minimum_confidence=round($minimum_confidence/100, 2); //round berfungsi untuk pembulatan desimal dengan parameternya 2
-    
 	//mulai perhitungan
 	if(empty($minimum_support) or empty($minimum_confidence)){
 		$error='Lengkapi form di bawah ini.';
@@ -462,13 +481,15 @@ if(!empty($error)){
 <div class="jumbotron" style=" margin-left: 200px">
   <h1 class="display-4">Sugeng Rawuh!!</h1>
   <p class="lead">dateng fitur analisis pola pembelian konsumen PT Aseli Dagadu Djokdja.</p>
-  <hr class="my-4">
+  <hr class="my-2">
 <?php
-
-if($minimum_support=='' or $minimum_confidence==''){ ?>
-    <p>Silahkan tekan <span class="badge badge-danger"> Reset </span>untuk membersihkan memori kemudian <span class="badge badge-primary">masukkan range data yang akan dianalisa,</span> diikuti dengan <span  class="badge badge-primary">support dan confidencenya.</span></p>
+if($jumlah_data>0){?>
+    <p class="border border-danger p-2">Tekan <span class="badge badge-danger" name="reset" id="reset" type="submit"> Reset </span> untuk mereset memori lalu re-input data.</p>
+<?php }elseif($minimum_support=='' and $minimum_confidence==''){ ?>
+    <p><span class="badge badge-primary">masukkan range data yang akan dianalisa</span> diikuti dengan <span  class="badge badge-primary">support dan confidencenya.</span></p>
 <?php }else{ ?>
-    <p>Tuan/Puan sedang menganalisa <span class="badge badge-primary"><?=$jumlah_transaksi;?></span> transaksi dari <span class="badge badge-primary"><?=$daritgl['tgl'];?></span> sampai <span class="badge badge-primary"><?=$sampaitgl['tgl'];?></span> dengan minimum support sebesar <span class="badge badge-secondary"><?=$_POST['minimum_support'];?>%</span> dan minimum confidence sebesar <span class="badge badge-secondary"><?=$_POST['minimum_confidence']?>%</span>.</p>
+    <p class="border border-dark p-2">Tuan/Puan sedang menganalisa <span class="badge badge-secondary"><?=$jumlah_transaksi;?></span> transaksi dari <span class="badge badge-secondary"><?=$daritgl['tgl'];?></span> sampai <span class="badge badge-secondary"><?=$sampaitgl['tgl'];?></span> dengan minimum support sebesar <span class="badge badge-secondary"><?=$_POST['minimum_support'];?>%</span> dan minimum confidence sebesar <span class="badge badge-secondary"><?=$_POST['minimum_confidence']?>%</span>.</p>
+    <p class="border border-danger p-2">Tekan <span class="badge badge-danger" name="reset" id="reset" type="submit"> Reset </span> untuk mereset memori lalu re-input data.</p>
 <?php };?>
 </div>
 
@@ -480,20 +501,20 @@ if($minimum_support=='' or $minimum_confidence==''){ ?>
     <div class="form-group">
         <label for="dari" class="col-sm-3 control-label">dari:<span class="text-danger">*</span></label>
         <div class="col-sm-7">
-            <input type="date" class="form-control" id="dari" name="dari">
+            <input type="date" class="form-control" id="dari" name="dari" <?= $disable;?>>
         </div>
     </div>
     <div class="form-group">
         <label for="sampai" class="col-sm-3 control-label">sampai:<span class="text-danger">*</span></label>
         <div class="col-sm-7">
-            <input type="date" class="form-control" id="sampai" name="sampai">
+            <input type="date" class="form-control" id="sampai" name="sampai" <?= $disable;?>>
         </div>
     </div>
             <div class="form-group">
                 <label for="minimum_support" class="col-sm-3 control-label">Min Support <span class="text-danger">*</span></label>
                 <div class="col-sm-7">
                     <div class="input-group">
-                        <input type="text" class="form-control" id="minimum_support" name="minimum_support" value="<?= htmlspecialchars($minimum_support);?>">
+                        <input type="text" class="form-control" id="minimum_support" name="minimum_support" value="<?= htmlspecialchars($minimum_support);?>"<?= $disable;?>>
                         <div class="input-group-prepend">
                             <span class="input-group-text" id="basic-addon1">%</span>
                         </div>
@@ -504,7 +525,7 @@ if($minimum_support=='' or $minimum_confidence==''){ ?>
                 <label for="minimum_confidence" class="col-sm-3 control-label">Min Confidence <span class="text-danger">*</span></label>
                 <div class="col-sm-7">
                     <div class="input-group">
-                        <input type="text" class="form-control" id="minimum_confidence" name="minimum_confidence" value="<?= htmlspecialchars($minimum_confidence);?>">
+                        <input type="text" class="form-control" id="minimum_confidence" name="minimum_confidence" value="<?= htmlspecialchars($minimum_confidence);?>" <?= $disable;?>>
                         <div class="input-group-prepend">
                             <span class="input-group-text" id="basic-addon1">%</span>
                         </div>
@@ -514,12 +535,11 @@ if($minimum_support=='' or $minimum_confidence==''){ ?>
     </div>
 </div>
     <div class="col-sm-7">
-        <button name="submit" id="submit" type="submit" class="btn btn-primary">Proses</button>
+        <button name="submit" id="submit" type="submit" class="btn btn-primary"<?= $disable;?>>Proses</button>
         <button name="reset" id="reset" type="submit" class="btn btn-danger">Reset</button>
     </div>
 </form>
 </div>
-
 <?php 
 if(isset($_POST['submit']) and $error==''){
 ?>
