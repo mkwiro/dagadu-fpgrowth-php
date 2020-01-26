@@ -73,27 +73,31 @@ $daftar_frequent_itemset='';
 $daftar_rule='';    
 
 #PROSES PERHITUNGAN#
-if(isset($_POST['reset'])){
-    var_dump(isset($_POST['reset']));
+if(isset($_POST['reset'])){ //Jika ditekan tombol reset; mereset semua data yang ada dalam database
     $q=mysqli_query($con, "DELETE FROM tb_barang_fpgrowth");
     $q2=mysqli_query($con, "DELETE FROM tb_transaksi_fpgrowth");
     $q3=mysqli_query($con, "DELETE FROM tb_transaksi_detail");
 }
 if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik maka"
-  //masukkan data ke database
-  var_dump($_POST['dari']);
+  //masukkan data ke tabel-tabel analisa fp growth
   $q=mysqli_query($con, "INSERT INTO tb_barang_fpgrowth(id_brg, kode_barang, nama_barang) SELECT b2_id, sing_b2, nama_b2 FROM b2");
-  $q2=mysqli_query($con, "INSERT INTO tb_transaksi_fpgrowth(kode_transaksi) SELECT DISTINCT transaksi_id FROM tb_stok WHERE tb_stok.tgl      BETWEEN CAST('".$_POST['dari']."' AS DATE) AND CAST('".$_POST['sampai']."' AS DATE)");
+  $q2=mysqli_query($con, "INSERT INTO tb_transaksi_fpgrowth(kode_transaksi, tgl) SELECT DISTINCT transaksi_id, tgl FROM tb_stok WHERE tb_stok.tgl BETWEEN CAST('".$_POST['dari']."' AS DATE) AND CAST('".$_POST['sampai']."' AS DATE)");
   $q3=mysqli_query($con, "INSERT INTO tb_transaksi_detail(id_transaksi, id_brg)
       SELECT tb_transaksi_fpgrowth.id_transaksi, LPAD(b2.b2_id, 2, 0)
       FROM tb_stok INNER JOIN tb_transaksi_fpgrowth ON tb_stok.transaksi_id = tb_transaksi_fpgrowth.kode_transaksi
       JOIN tb_barang ON tb_stok.kode_barang=tb_barang.kode_barang 
       JOIN b2 ON b2.b2_id=tb_barang.b2");
 
-
+    //menghitung jumlah transaksi
     $q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth"); //menghitung jumlah dari tb_transaksi disimpan pada var. q
     $h=mysqli_fetch_array($q); //menampilkan data mysql 
     $jumlah_transaksi=(int)$h['jml'];
+
+    //Mengambil data dari tanggal dan sampai tanggal dari database
+    $q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl ASC LIMIT 1");
+    $daritgl=mysqli_fetch_array($q);
+    $q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl DESC LIMIT 1");
+    $sampaitgl=mysqli_fetch_array($q);
 
 
 	$time_before = microtime(true); //untuk menghitung waktu
@@ -108,12 +112,9 @@ if(isset($_POST['submit'])){ //isset : ketika "button dgn name="submit" di klik 
         //jika pada form inputan terdapat yang kosong atau tidak diisi maka akan muncul pesan error.
 	} else {
 		$q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth"); //menghitung jumlah dari tb_transaksi disimpan pada var. q
-        
         $h=mysqli_fetch_array($q); //menampilkan data mysql 
-        
         $total_transaksi=(int)$h['jml'];
-        var_dump($total_transaksi);
-        var_dump($jumlah_transaksi);
+
 		if($jumlah_transaksi > $total_transaksi){
 			$error='Jumlah transaksi berbeda'; //error jika inputan melebihi data transaksi yang ada
 		} else {
@@ -457,7 +458,22 @@ if(!empty($error)){
     ';
 }
 ?>
-<div class="mt-5" style=" margin-left: 200px">
+<!-- JUMBOTRON -->
+<div class="jumbotron" style=" margin-left: 200px">
+  <h1 class="display-4">Sugeng Rawuh!!</h1>
+  <p class="lead">dateng fitur analisis pola pembelian konsumen PT Aseli Dagadu Djokdja.</p>
+  <hr class="my-4">
+<?php
+
+if($minimum_support=='' or $minimum_confidence==''){ ?>
+    <p>Silahkan tekan <span class="badge badge-danger"> Reset </span>untuk membersihkan memori kemudian <span class="badge badge-primary">masukkan range data yang akan dianalisa,</span> diikuti dengan <span  class="badge badge-primary">support dan confidencenya.</span></p>
+<?php }else{ ?>
+    <p>Tuan/Puan sedang menganalisa <span class="badge badge-primary"><?=$jumlah_transaksi;?></span> transaksi dari <span class="badge badge-primary"><?=$daritgl['tgl'];?></span> sampai <span class="badge badge-primary"><?=$sampaitgl['tgl'];?></span> dengan minimum support sebesar <span class="badge badge-secondary"><?=$_POST['minimum_support'];?>%</span> dan minimum confidence sebesar <span class="badge badge-secondary"><?=$_POST['minimum_confidence']?>%</span>.</p>
+<?php };?>
+</div>
+
+<!-- INPUT DATA BASE dan MIN SUP DAN MIN CON -->
+<div class="mt-2" style=" margin-left: 200px">
 <form action="<?php echo $link_list;?>"method="post" class="form-horizontal">
 <div class="row">
     <div class="col-lg-12">
@@ -503,9 +519,11 @@ if(!empty($error)){
     </div>
 </form>
 </div>
+
 <?php 
 if(isset($_POST['submit']) and $error==''){
 ?>
+
 <!-- TAMPILAN -->
 <div class="mt-5" style=" margin-left: 200px">
 <div class="row">

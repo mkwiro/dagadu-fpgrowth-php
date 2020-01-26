@@ -1,6 +1,6 @@
 <div class="main" style=" margin-left: 200px">
 <!-- PROSES PEMASUKAN DATA DARI TABEL SIPANDU KE TABEL FPGROWTH -->
-<?php
+<!-- <?php
 if(isset($_POST['submit'])){ 
     var_dump($_POST);
     $servername = "localhost";
@@ -20,10 +20,10 @@ if(isset($_POST['submit'])){
     JOIN tb_barang ON tb_stok.kode_barang=tb_barang.kode_barang 
     JOIN b2 ON b2.b2_id=tb_barang.b2");
 }
-?>
+?> -->
 
 <h1>Selamat datang</h1>
-<p>Range data transaksi yang akan dianalisa</p>
+<!-- <p>Range data transaksi yang akan dianalisa</p>
 <form action="<?= BASEURL;?>index" class="col-lg-5" method="POST">
 
 <div class="form-group">
@@ -37,5 +37,5 @@ if(isset($_POST['submit'])){
 </div>
 
 <button type="submit" name="submit" class="btn btn-primary">Proses</button>
-</form>
+</form> -->
 </div>
