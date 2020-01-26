@@ -484,12 +484,15 @@ if(!empty($error)){
   <hr class="my-2">
 <?php
 if($jumlah_data>0){?>
-    <p class="border border-danger p-2">Tekan <span class="badge badge-danger" name="reset" id="reset" type="submit"> Reset </span> untuk mereset memori lalu re-input data.</p>
+    <p>status memori: <span class="badge badge-danger">terisi</span></p>
+    <p class="border border-danger p-2">Tekan <span class="badge badge-danger" name="reset" id="reset" type="submit"> Reset </span> untuk mengosongkan memori dan reinput data.</p>
 <?php }elseif($minimum_support=='' and $minimum_confidence==''){ ?>
-    <p><span class="badge badge-primary">masukkan range data yang akan dianalisa</span> diikuti dengan <span  class="badge badge-primary">support dan confidencenya.</span></p>
+    <p>status memori: <span class="badge badge-success">kosong</span></p>
+    <p class="border border-primary p-2"><span class="badge badge-primary">masukkan range data yang akan dianalisa</span> diikuti dengan <span  class="badge badge-primary">support dan confidencenya.</span></p>
 <?php }else{ ?>
+    <p>status memori: <span class="badge badge-danger">terisi</span></p>
     <p class="border border-dark p-2">Tuan/Puan sedang menganalisa <span class="badge badge-secondary"><?=$jumlah_transaksi;?></span> transaksi dari <span class="badge badge-secondary"><?=$daritgl['tgl'];?></span> sampai <span class="badge badge-secondary"><?=$sampaitgl['tgl'];?></span> dengan minimum support sebesar <span class="badge badge-secondary"><?=$_POST['minimum_support'];?>%</span> dan minimum confidence sebesar <span class="badge badge-secondary"><?=$_POST['minimum_confidence']?>%</span>.</p>
-    <p class="border border-danger p-2">Tekan <span class="badge badge-danger" name="reset" id="reset" type="submit"> Reset </span> untuk mereset memori lalu re-input data.</p>
+    <p class="border border-danger p-2">Tekan <span class="badge badge-danger" name="reset" id="reset" type="submit"> Reset </span> untuk mengosongkan memori dan reinput data</p>
 <?php };?>
 </div>
 
@@ -588,29 +591,6 @@ if(isset($_POST['submit']) and $error==''){
                 </thead>
                 <tbody>
                     <?php echo $daftar_support;?>
-                </tbody>
-            </table>
-            </div>
-            </div>
-        </div>
-
-        <div class="col-xl-12 col-lg-7">
-            <div class="card shadow mb-4">
-            <!-- Card Header - Dropdown -->
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-              <h6 class="m-0 font-weight-bold text-primary">Itemset Priority</h6>
-            </div>
-            <!-- Card Body -->
-            <div class="card-body">
-                <table class="table table-striped table-hover table-bordered">
-                <thead>
-                    <tr>
-                        <th class="text-center" width="100">TRANSAKSI</th>
-                        <th class="text-center">ITEM</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php echo $daftar_itemset_priority;?>
                 </tbody>
             </table>
             </div>
