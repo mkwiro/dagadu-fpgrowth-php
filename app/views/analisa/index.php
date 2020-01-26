@@ -484,10 +484,13 @@ if(!empty($error)){
   <hr class="my-2">
 <?php
 if($jumlah_data>0){?>
+    <p>status memori: <span class="badge badge-danger">penuh</span></p>
     <p class="border border-danger p-2">Tekan <span class="badge badge-danger" name="reset" id="reset" type="submit"> Reset </span> untuk mereset memori lalu re-input data.</p>
 <?php }elseif($minimum_support=='' and $minimum_confidence==''){ ?>
+    <p>status memori: <span class="badge badge-success">kosong</span></p>
     <p><span class="badge badge-primary">masukkan range data yang akan dianalisa</span> diikuti dengan <span  class="badge badge-primary">support dan confidencenya.</span></p>
 <?php }else{ ?>
+    <p>status memori: <span class="badge badge-danger">penuh</span></p>
     <p class="border border-dark p-2">Tuan/Puan sedang menganalisa <span class="badge badge-secondary"><?=$jumlah_transaksi;?></span> transaksi dari <span class="badge badge-secondary"><?=$daritgl['tgl'];?></span> sampai <span class="badge badge-secondary"><?=$sampaitgl['tgl'];?></span> dengan minimum support sebesar <span class="badge badge-secondary"><?=$_POST['minimum_support'];?>%</span> dan minimum confidence sebesar <span class="badge badge-secondary"><?=$_POST['minimum_confidence']?>%</span>.</p>
     <p class="border border-danger p-2">Tekan <span class="badge badge-danger" name="reset" id="reset" type="submit"> Reset </span> untuk mereset memori lalu re-input data.</p>
 <?php };?>
