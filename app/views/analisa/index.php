@@ -422,6 +422,8 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
                 //pembulatan nilai support dan confidence sampai 2 digit dibelakang koma
                 $nilai_support=round($pattern_fptree_all[$i]['count'] / $jumlah_transaksi, 2);
                 $nilai_confidence=round($pattern_fptree_all[$i]['count'] / $frekuensi[$id_brg1], 2);
+                $nilai_expected_confidence=$frekuensi[$id_brg2]/$jumlah_transaksi;
+                $nilai_lift_ratio=round($nilai_confidence/$nilai_expected_confidence, 2);
                 if($nilai_confidence >= $nilai_minimum_confidence and $pattern_fptree_all[$i]['count'] >= $nilai_minimum_support){
                     $no++;
                     $daftar_rule.='
@@ -430,6 +432,7 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
                     <td>Jika Konsumen membeli '.htmlspecialchars($nama_barang[$id_brg1]).', maka membeli '.htmlspecialchars($nama_barang[$id_brg2]).'</td>
                     <td class="text-center">'.$nilai_support.'</td>
                     <td class="text-center">'.$nilai_confidence.'</td>
+                    <td class="text-center">'.$nilai_lift_ratio.'</td>
                     </tr>
                     ';
                 }
@@ -676,6 +679,7 @@ if(isset($_POST['submit']) and $error==''){
                         <th class="text-center">RULE</th>
                         <th class="text-center" width="100">SUPPORT</th>
                         <th class="text-center" width="100">CONFIDENCE</th>
+                        <th class="text-center" width="150">LIFT RATIO</th>
                     </tr>
                 </thead>
                 <tbody>
