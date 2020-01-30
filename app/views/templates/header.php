@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><?= $data['judul'];?></title>
     <link rel="stylesheet" href="<?=BASEURL;?>css/bootstrap.css">
-    <!-- <style>
+    <style>
 .sidenav {
   height: 100%;
   width: 189px;
@@ -42,4 +42,4 @@
   <a href="<?=BASEURL;?>transaksi" target="_blank">Transaksi</a>
   <a href="<?=BASEURL;?>barang"target="_blank">Barang</a>
   <a href="<?=BASEURL;?>analisa">Analisis</a>
-</div> -->
+</div>
