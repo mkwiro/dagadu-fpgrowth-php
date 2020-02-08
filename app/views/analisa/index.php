@@ -16,9 +16,8 @@ function stable_uasort(&$array, $cmp_function) {
     if(count($array) < 2) {
         return;
     }
-    
     $halfway = count($array) / 2;
-    $array1 = array_slice($array, 0, $halfway, TRUE); //arrayslice berfungsi mengembalikan fungsi array bagian yg dipilih
+    $array1 = array_slice($array, 0, $halfway, TRUE);
     $array2 = array_slice($array, $halfway, NULL, TRUE);
   
     stable_uasort($array1, $cmp_function);
@@ -31,7 +30,6 @@ function stable_uasort(&$array, $cmp_function) {
     reset($array1);
     reset($array2);
     while(current($array1) && current($array2)) { 
-    //fungsi while akan terus berjalan dan berulang terus selama kondisi disyaratkan memenuhi
         if(call_user_func($cmp_function, current($array1), current($array2)) < 1) {
             $array[key($array1)] = current($array1);
             next($array1);
@@ -41,12 +39,10 @@ function stable_uasort(&$array, $cmp_function) {
         }
     }
     while(current($array1)) { 
-    //fungsi while akan terus berjalan dan berulang terus selama kondisi disyaratkan memenuhi
         $array[key($array1)] = current($array1);
         next($array1);
     }
     while(current($array2)) { 
-    //fungsi while akan terus berjalan dan berulang terus selama kondisi disyaratkan memenuhi
         $array[key($array2)] = current($array2);
         next($array2);
     }
@@ -59,7 +55,7 @@ function cmp($a, $b) { //cmp digunakan untuk membandingkan dua elemen daftar
     return ($a[0] > $b[0]) ? -1 : 1;
 }
 
-//var yang digunkan untuk menyimpan hasil proses analisa
+#VARIABEL-VARIABEL YANG DIGUNAKAN
 $link_list=BASEURL.'analisa';
 $minimum_support='';
 $minimum_confidence='';
@@ -77,8 +73,9 @@ $disable='';
 $daritgl='';
 $sampaitgl='';  
 
-$q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth"); //menghitung jumlah dari tb_transaksi disimpan pada var. q
-$h=mysqli_fetch_array($q); //menampilkan data mysql 
+#MENGHITUNG JUMLAH DATA
+$q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth");
+$h=mysqli_fetch_array($q);
 $jumlah_data=(int)$h['jml'];
 
 //cek sudah ada data yang ada di dalam database? untuk jumbotron; 
