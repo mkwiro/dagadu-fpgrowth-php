@@ -9,10 +9,9 @@ $database = "test";
         echo "Failed to connect to MySQL: " . mysqli_connect_error();
         exit();
          }
-
+//uasort — Sort an array with a user-defined comparison function and maintain index association
+// keep the order when two members compare as equal
 function stable_uasort(&$array, $cmp_function) { 
-/*mengurutkan array sedemikian rupa sehingga indeks array mempertahankan korelasinya
- dengan elemen array yang terkait dengannya, menggunakan fungsi perbandingan yang ditentukan pengguna.*/
     if(count($array) < 2) {
         return;
     }
@@ -48,7 +47,8 @@ function stable_uasort(&$array, $cmp_function) {
     }
     return;
 }
-function cmp($a, $b) { //cmp digunakan untuk membandingkan dua elemen daftar
+ //cmp function
+function cmp($a, $b) {
     if($a[0] == $b[0]) {
         return 0;
     }
@@ -85,14 +85,17 @@ $q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl DESC L
 $sampaitgl=mysqli_fetch_array($q);
 //cek sudah ada data yang ada di dalam database? kalau ada, dari dan sampainya dimatikan 
 
-#PROSES PERHITUNGAN#
-if(isset($_POST['reset'])){ //Jika ditekan tombol reset; mereset semua data yang ada dalam database
+#TOMBOL RESET
+ //Jika ditekan tombol reset; mereset semua data yang ada dalam tabel
+if(isset($_POST['reset'])){
     $disable="";
     $q=mysqli_query($con, "DELETE FROM tb_barang_fpgrowth");
     $q2=mysqli_query($con, "DELETE FROM tb_transaksi_fpgrowth");
     $q3=mysqli_query($con, "DELETE FROM tb_transaksi_detail");
 }
-if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
+#TOMBOL PROSES
+ //jika isset PROSES (submit) di klik maka"
+if(isset($_POST['submit'])){
     $disable="disabled";
   $q=mysqli_query($con, "INSERT INTO tb_barang_fpgrowth(id_brg, kode_barang, nama_barang) SELECT b2_id, sing_b2, nama_b2 FROM b2");
   $q2=mysqli_query($con, "INSERT INTO tb_transaksi_fpgrowth(kode_transaksi, tgl) SELECT DISTINCT transaksi_id, tgl FROM tb_stok WHERE tb_stok.tgl BETWEEN     CAST('".$_POST['dari']."' AS DATE) AND CAST('".$_POST['sampai']."' AS DATE)");
@@ -101,137 +104,145 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
       FROM tb_stok INNER JOIN tb_transaksi_fpgrowth ON tb_stok.transaksi_id = tb_transaksi_fpgrowth.kode_transaksi
       JOIN tb_barang ON tb_stok.kode_barang=tb_barang.kode_barang 
       JOIN b2 ON b2.b2_id=tb_barang.b2");
-    //menghitung jumlah transaksi
-    $q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth"); //menghitung jumlah dari tb_transaksi disimpan pada var. q
-    $h=mysqli_fetch_array($q); //menampilkan data mysql 
+    //menghitung jumlah transaksi, disimpan pada variabel $jumlah_transaksi
+    $q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth");
+    $h=mysqli_fetch_array($q);
     $jumlah_transaksi=(int)$h['jml'];
 
-    //Mengambil data dari tanggal dan sampai tanggal dari database untuk jumbotron
-    // $q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl ASC LIMIT 1");
-    // $daritgl=mysqli_fetch_array($q);
-    // $q=mysqli_query($con, "SELECT tgl FROM tb_transaksi_fpgrowth ORDER BY tgl DESC LIMIT 1");
-    // $sampaitgl=mysqli_fetch_array($q);
 
     $daritgl=$_POST['dari'];
     $sampaitgl=$_POST['sampai'];
 	$time_before = microtime(true); //untuk menghitung waktu
 	$minimum_support=$_POST['minimum_support']; //mengambil nilai minimum support yang sudah diinputkan 
-	$nilai_minimum_support=round(($minimum_support/100)*$jumlah_transaksi, 2); //round berfungsi untuk pembulatan desimal dengan parameternya 2
+	$nilai_minimum_support=round(($minimum_support/100)*$jumlah_transaksi, 2); //round berfungsi untuk pembulatan desimal dengan parameternya 2 digit dibelakang koma
 	$minimum_confidence=$_POST['minimum_confidence']; //mengambil nilai minimum confidence yang sudah diinputkan 
-	$nilai_minimum_confidence=round($minimum_confidence/100, 2); //round berfungsi untuk pembulatan desimal dengan parameternya 2
-	//mulai perhitungan
+	$nilai_minimum_confidence=round($minimum_confidence/100, 2); //round berfungsi untuk pembulatan desimal dengan parameternya 2 digit dibelakang koma
+    
+    //jika pada form inputan terdapat yang kosong atau tidak diisi maka akan muncul pesan error.
 	if(empty($minimum_support) or empty($minimum_confidence)){
 		$error='Lengkapi form di bawah ini.';
-        //jika pada form inputan terdapat yang kosong atau tidak diisi maka akan muncul pesan error.
 	} else {
-		$q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth"); //menghitung jumlah dari tb_transaksi disimpan pada var. q
-        $h=mysqli_fetch_array($q); //menampilkan data mysql 
+         //menghitung jumlah dari tb_transaksi_fpgrowth disimpan dalam variabel $total_transaksi
+		$q=mysqli_query($con, "SELECT count(*) AS jml FROM tb_transaksi_fpgrowth");
+        $h=mysqli_fetch_array($q);
         $total_transaksi=(int)$h['jml'];
 
+        //apabila $jumlah_transaksi > $total_transaksi maka menampilkan pesan error
 		if($jumlah_transaksi > $total_transaksi){
-			$error='Jumlah transaksi berbeda'; //error jika inputan melebihi data transaksi yang ada
+			$error='Jumlah transaksi berbeda';
 		} else {
+            #MEMBUAT DAFTAR TRANSAKSI
             $transaksi=array();
             $kode_transaksi=array();
-            $q="SELECT * FROM tb_transaksi_fpgrowth ORDER BY id_transaksi LIMIT 0,".$jumlah_transaksi; //memilih data dimulai dari row ke-0
-            
-            $q=mysqli_query($con, $q); //menjalankan perintah atau instruksi query ke database MySQL
-           
-            while($h=mysqli_fetch_array($q)){ //menghasilkan array dari tabel dalam bentuk associative array dan/atau numeric array
+
+            $q="SELECT * FROM tb_transaksi_fpgrowth ORDER BY id_transaksi LIMIT 0,".$jumlah_transaksi;
+            $q=mysqli_query($con, $q);
+            while($h=mysqli_fetch_array($q)){
+                //id_transaksi dimasukkan ke array $transaksi
+                //kode_transaksi dimasukkan ke array $kode_transaksi beracuan pada id_transaksi
                 $transaksi[]=$h['id_transaksi'];
                 $kode_transaksi[$h['id_transaksi']]=$h['kode_transaksi'];
                 
 			}
-            //menghapus duplikasi data pada setiap transaksi
+            #Penghapusan Duplikasi Itemset dalam 1 transaksi
 			$transaksi_barang=array();
 			for($i=0;$i<count($transaksi);$i++){
                 $transaksi_barang[$transaksi[$i]]=array();
+                //menampilkan distinct id barang dari tabel transaksi_detail, dengan id dari perulangan for, diurutkan dengan nama barang di tabel tb_barang
 				$q=mysqli_query($con, "SELECT DISTINCT tb_barang_fpgrowth.id_brg FROM tb_transaksi_detail INNER JOIN tb_barang_fpgrowth ON 
-				tb_transaksi_detail.id_brg=tb_barang_fpgrowth.id_brg WHERE tb_transaksi_detail.id_transaksi='".$transaksi[$i]."' ORDER BY tb_barang_fpgrowth.nama_barang");
-                //distinct digunakan untuk mencegah duplikasi data barang pada transaksi, 
-                //jika ada duplikasi data barang yang dibeli konsumen maka dieliminasi menjadi 1 data saja
+                tb_transaksi_detail.id_brg=tb_barang_fpgrowth.id_brg WHERE tb_transaksi_detail.id_transaksi='".$transaksi[$i]."' ORDER BY tb_barang_fpgrowth.nama_barang");
+                //id-barnag dimasukkan dalam array $transaksi_barang di group oleh id_transaksi
 				while($h=mysqli_fetch_array($q)){
                     $transaksi_barang[$transaksi[$i]][]=$h['id_brg'];
 				}
-			}
-            //membuat header itemset pada tabulasi databarang dan transaksi
+            }
+            
+            #membuat header itemset pada tabulasi databarang dan transaksi
             $barang=array();
             $kode_barang=array();
             $nama_barang=array();
+            //menampilkan distinct seluruh data tb_barang_fpgrowth yang ditemukan dalam transaksi dengan acuan dimana (IN) id-id transaksi yang ada dalam tabel
+            //diurutkan oleh nama_barang 
             $q="SELECT DISTINCT tb_barang_fpgrowth.* FROM tb_transaksi_detail INNER JOIN tb_barang_fpgrowth ON 
             tb_transaksi_detail.id_brg=tb_barang_fpgrowth.id_brg WHERE tb_transaksi_detail.id_transaksi IN (".implode(',', $transaksi).") ORDER BY tb_barang_fpgrowth.nama_barang";
-            
             $q=mysqli_query($con, $q);
-            
             while($h=mysqli_fetch_array($q)){
-
                 $barang[]=$h['id_brg'];
                 $kode_barang[$h['id_brg']]=$h['kode_barang'];
                 $nama_barang[$h['id_brg']]=$h['nama_barang'];
             }
 
-            //Membuat tabulasi data barang dan transaksi
+            //Tampilan Tabulasi data barang dan transaksi
+            //dan Penghitungan Frekuensi Barang
             $frekuensi=array();
-           
             for($i=0;$i<count($transaksi);$i++){
                 $id_transaksi=$transaksi[$i];
                 $daftar_tabulasi.='
                 <tr>
-                <td>'.htmlspecialchars($kode_transaksi[$id_transaksi]).'</td>'; //htmlspesial  fungsi mengkonversi beberapa karakter yang telah ditetapkan untuk entitas HTML
+                <td>'.htmlspecialchars($kode_transaksi[$id_transaksi]).'</td>';
+                 //htmlspesial  fungsi mengkonversi beberapa karakter yang telah ditetapkan untuk entitas HTML
                 //fetch data barang dengan perulangan dalam setiap transaksi melalui header itemset tabulasi,
                 for($ii=0;$ii<count($barang);$ii++){
                 //if cek jika ada $barang[$ii] di dalam $transaksi_barang[$id_transaksi] maka
                     if(in_array($barang[$ii], $transaksi_barang[$id_transaksi])){
                         //apabila barang sudah ditemukan dengan if diatas maka 
                         if(!isset($frekuensi[$barang[$ii]])){$frekuensi[$barang[$ii]]=0;}
-                        //nominal jumlah barangnya ditambah +1
+                        //FREKUENSI BARANG ditambah +1
                         $frekuensi[$barang[$ii]]=$frekuensi[$barang[$ii]]+1;
-                        //tanda 1 terbeli
+                        //status tanda 1 terbeli
                         $sts='1';
                     }else{
-                        //tidak ada tanda cek list dalam tabel
+                        //tidak ada tanda dalam tabel
                         $sts='';
                     }
                     $daftar_tabulasi.='<td class="text-center">'.$sts.'</td>';
                 }
-                $daftar_tabulasi.='</tr>'; //tabel data transaksi dan barang
+                $daftar_tabulasi.='</tr>';
             }
-            //variabel $frekuensi_sort_all array untuk menampung frekunesi item yang nanti diurutkan dari yang terbesar
+            #ITEMSET FREQUENT
+            //variabel $frekuensi_sort_all array untuk menampung frekuensi setiap itemset
             $frekuensi_sort_all=array(); 
-            //perulangan untuk fetch data dari header barang yang muncul dari keseluruhan transaksi
             for($i=0;$i<count($barang);$i++){
-                //array barang yang terbeli dan jumlahnya transaksi yang ada barnag tsb dimasukkan ke array $frekuensi_sort_all  
+                //array $frekuensi_sort_all diisi frekuensi barang dan id barang
                 $frekuensi_sort_all[]=array($frekuensi[$barang[$i]], $barang[$i]);
             }
-            //cmp berfungsi membandingkan dua elemen daftar
+            //pemanggilan fungsi stable_uasort sebagai pengurutan asosiatif array 
             stable_uasort($frekuensi_sort_all, 'cmp'); 
-            //extract value dari array $frekuensi_sort_all
+            //array_values() returns all the values from the array and indexes the array numerically.
+            //ekstrak value dari array asosiatif $frekuensi_sort_all menjadi array numerik
             $frekuensi_sort_all = array_values($frekuensi_sort_all);
 
-            //ITEM SET SUPPORT var: $frekuensi_sort
-            //menyiapkan variabel $frekuensi_sort sebagai variabel frequent item yang sudah minimum supportnya sesuai
+            #ITEMSET SUPPORT 
+            //variabel $frekuensi_sort sebagai variabel ITEMSET SUPPORT
             $frekuensi_sort=array();
-            //for untuk extract satu satu data frequent item
             for($i=0;$i<count($frekuensi_sort_all);$i++){
-                //if $frekuensi_sort_all[$i][0] (jumlah frequent item) lebih dari sama dengan minimum support...
+                //masih inget kan isinya index-index $frekuensi_sort_all?
+                //index 0 berisi jumlah frequensi
+                //index 1 berisi id_barang
+                //nah, if index 0 (jumlah frequensi) pada array $frekuensi_sort_all >= $nilai_minimum_support
                 if($frekuensi_sort_all[$i][0] >= $nilai_minimum_support){
-                    //maka frequent item dimasukkan ke array  $frekuensi_sort[]
+                    //ITEMSET FREQUENT dimasukkan ke dalam array ITEMSET SUPPORT, $frekuensi_sort
                     $frekuensi_sort[]=$frekuensi_sort_all[$i];
                 }
             }
 
-            //ITEMSET PRIORITY var: $transaksi_barang_priority
-            //Menseleksi transaksi yang mengandung itemset support di dalamanya
+            //ITEMSET PRIORITY
+            //variabel $transaksi_barang_priority sebagai variabel ITEMSET PRIORITY
             $transaksi_barang_priority=array();
             for($i=0; $i<count($transaksi); $i++){
+                //membuat array dari $transaksi_barang_priority[$transaksi[$i]], paham gak?
+                //jadi jumlah array $transaksi_barang_priority sesuai dengan jumlah transaksi
                 $transaksi_barang_priority[$transaksi[$i]]=array();
                 for($ii=0; $ii<count($frekuensi_sort); $ii++){
+                    //masih inget variabel $transaksi_barang? isinya distinct barang dalam setiap transaksi
+                    //dicek if in_array $transaksi_barang[$transaksi[$i]] terdapat $frekuensi_sort[$ii][1], index [1] isinya barang ITEMSET SUPPORT
+                    //maka barang tersebut dimasukkan dalam variabel ITEMSET SUPPORT
                     if(in_array($frekuensi_sort[$ii][1], $transaksi_barang[$transaksi[$i]])){
                         $transaksi_barang_priority[$transaksi[$i]][]=$frekuensi_sort[$ii][1];
                     }
                 }
             }
-            //ITEMSET FREQUENT
+            #TAMPILAN ITEMSET FREQUENT
             $no=0;
             for($i=0;$i<count($frekuensi_sort_all);$i++){
                 $id_brg=$frekuensi_sort_all[$i][1];
@@ -244,7 +255,7 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
                 </tr>
                 ';
             }
-            //ITEM SUPPORT
+            #TAMPILAN ITEMSET SUPPORT
             $no=0;
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
@@ -257,15 +268,19 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
                 </tr>
                 ';
             }
-            //ITEM SET PRIORITY
+            #TAMPILAN ITEMSET PRIORITY
             $itemset_priority=array();
             for($i=0;$i<count($transaksi);$i++){
                 $tmp=array();
                 $tmp2=array();
                 for($ii=0;$ii<count($transaksi_barang_priority[$transaksi[$i]]);$ii++){
+                    //variabel $nama_barang berisi barang yang masuk dalam transaksi
+                    //mengisi array tmp[] dengan nama barang ITEMSET SUPPORT pada setiap transaksi
+                    //mengisi array tmp2[] dengan id barang ITEMSET SUPPORT pada setiap transaksi
                     $tmp[]=$nama_barang[$transaksi_barang_priority[$transaksi[$i]][$ii]];
                     $tmp2[]=$transaksi_barang_priority[$transaksi[$i]][$ii];
                 }
+                //array muldimens $itemset_priority berisi seluruh id_transaksi yang masing-masing berisi $tmp2
                 $itemset_priority[$transaksi[$i]]=$tmp2;
                 $daftar_itemset_priority.='
                 <tr>
@@ -274,83 +289,113 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
                 </tr>
                 ';
             }
-
-
+            #FP TREE
+            //variabel $pattern_base punya CONDITIONAL PATTERN BASE
+            //variabel $pattern_fptree punya FP TREE
             $pattern_base=array();
             $pattern_fptree=array();
-            //FP TREE => CONDITIONAL PATTERN BASE var: $pattern_fptree
             for($i=0;$i<count($frekuensi_sort);$i++){
+                //id barang pada index [1] pada array ITEMSET SUPPORT dimasukkan ke variabel $id_brg
                 $id_brg=$frekuensi_sort[$i][1];
                 $pattern_base[$id_brg]=array();
                 $pattern_fptree[$id_brg]=array();
                 $pattern=array();
                 $pattern2=array();
-                
+            //perulangan for untuk cek seluruh transaksi  
             for($ii=0;$ii<count($transaksi);$ii++){
                     $pattern_tmp=array();
-                    //if in array $itemset_priority[$transaksi[$ii]] ada $id_barang
+                    //cek if in array ITEMSET PRIORITY pada seluruh transaksi terdapat id_brg, true.., else cek count $pattern_tmp>0?
                     if(in_array($id_brg, $itemset_priority[$transaksi[$ii]])){ 
-                        for($iii=0;$iii<count($itemset_priority[$transaksi[$ii]]);$iii++){
+                        //if true, lakukan perulangan lagi, untuk cek didalam array ITEMSET PRIORITY                    
+                        for($iii=0; $iii<count($itemset_priority[$transaksi[$ii]]); $iii++){
+                            //if di dalam ITEM PRIORITY ketemu id_brg, true, break lompat ke bawah
                             if($itemset_priority[$transaksi[$ii]][$iii]==$id_brg){
                                 break;
                             }else{
+                                //FPTREE
+                                //else, mengisi variabel $pattern_tmp dengan id barang tadi
                                 $pattern_tmp[]=$itemset_priority[$transaksi[$ii]][$iii];
-                                //mengecek nilai menggunakan array key, mengembalikan jika nilai true ada dan false jika kunci tidak ada
+                                //mengecek key menggunakan array key, mengembalikan jika nilai true ada dan false jika kunci tidak ada
+                                //cek apakah dalam $pattern_fptree[$id_brg] ada id barang pada ITEM PRIORITY tadi?
                                 if(array_key_exists($itemset_priority[$transaksi[$ii]][$iii], $pattern_fptree[$id_brg])){
+                                    //true, array $pattern_fptree yang mempunyai id_brg ITEMSET SUPPORT, id barang ITEMSET PRIORITY dan count..
+                                    //value count-nya +1
                                     $pattern_fptree[$id_brg][$itemset_priority[$transaksi[$ii]][$iii]]['count']=$pattern_fptree[$id_brg][$itemset_priority[$transaksi[$ii]][$iii]]['count']+1;
+                                    //else, $pattern_fptree yang mempunyai id_brg ITEMSET SUPPORT, id barang ITEMSET PRIORITY ditambah array count dengan value 1
                                 }else{
                                     $pattern_fptree[$id_brg][$itemset_priority[$transaksi[$ii]][$iii]]=array('count'=>1);
                                 }
                             }
                         }
                     }
+                    #CONDITIONAL PATTERN BASE
+                    //if count pattern_tmp atau node-nodenya suffixnya >0
                     if(count($pattern_tmp)>0){
+                        //implode value (node suffixnya) dengan _
                         $id=implode('_', $pattern_tmp);
+                        //if key pada $id yang berisi node tadi ada di $pattern
                         if(array_key_exists($id, $pattern)){
-                            //array key berfungsi mengecek nilai, mengembalikan jika nilai true ada dan false jika kunci tidak ada
+                            //true, count pada pattern +1
                             $pattern[$id]['count']=$pattern[$id]['count']+1;
                         }else{
+                            //else pattern ditambahkan dengan count bernilai 1
                             $pattern[$id]=array('pattern'=>$pattern_tmp, 'count'=>1);
                         }
                     }
                 }
+                //cek if count pattern > 0
+                //pattern dimasukkan ke pattern base
                 if(count($pattern)>0){
                     $pattern_base[$id_brg]=$pattern;
                 }
+                //cek if count pattern2 > 0
+                //pattern dimasukkan ke pattern fptree
                 if(count($pattern2)>0){
                     $pattern_fptree[$id_brg]=$pattern2;
                 }
-
             }
-            //FREQUENT PATTERN
+            #FREQUENT PATTERN
+            //variabel $pattern_fptree yang berisi fp-tree akan diubah menjadi CONDITIONAL PATTERN BASE
+            //variabel $pattern_fptree_all disiapkan untuk menampung detail FREQUENT PATTERN
             $pattern_fptree_all=array();
             $arr=$pattern_fptree;
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
+                //if isset $arr ada $id_brg dan countnya >0
                 if(isset($arr[$id_brg]) and count($arr[$id_brg])>0){
                     $p=$arr[$id_brg];
                     $arr2=array();
-                    foreach($p as $id => $value) { //perulangan khusus untuk nilai array.s
+                    foreach($p as $id => $value) {
+                        //$arr2 berisi CONDITIONAL PATTERN BASE
                         $arr2[]=array('item1'=>$id, 'item2'=>$id_brg, 'count'=>$value['count']);
+                        //$pattern_fptree_all berisi DETAIL CONDITIONAL PATTERN BASE
                         $pattern_fptree_all[]=array('item1'=>$id, 'item2'=>$id_brg, 'count'=>$value['count']);
                     }
+                    //variabel $arr2 dimasukkan ke $pattern_fptree per $id_brg, sehingga
+                    //variabel $pattern_fptree berisi CONDITIONAL PATTERN BASE per suffix
                     $pattern_fptree[$id_brg]=$arr2;
                 }
             }
-            //CONDITIONAL PATTERN BASE
+            #TAMPILAN CONDITIONAL PATTERN BASE
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
+                //if isset $id_brg dalam pattern base dan >0
                 if(isset($pattern_base[$id_brg]) and count($pattern_base[$id_brg])>0){
                     $p=$pattern_base[$id_brg];
                     $pattern_nama=array();
+                    //nested foreach untuk mengambil node-node suffix
+                    //nama_barang disesuaikan dengan node suffixnya dimasukkan ke array v
                     foreach($p as $id => $value) {
                         $v=array();
                         foreach ($value['pattern'] as $value2) {
                             $v[]=$nama_barang[$value2];
                         }
+                        //array v yang berisi nama node-node dari suffix diimplode dan
+                        //ditambakan countnya lalu disimpan pada $pattern_nama
                         $pattern_nama[]='{'.implode(', ', $v).' : '.$value['count'].'}';
-                        //implode berfungsi menggabungkan kembali string yang telah dipecahkan
+                        
                     }
+                    //keseluruhan $pattern_nama diimplode dan dimasukkan dalam $pattern_label
                     $pattern_label='{'.implode(', ', $pattern_nama).'}';
                     //implode berfungsi menggabungkan kembali string yang telah dipecahkan
                     $daftar_conditional_pattern_base.='
@@ -362,21 +407,26 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
 
                 }
             }
-            //CONDITIONAL FP TREE
+            var_dump($nama_barang);
+            #TAMPILAN CONDITIONAL FP TREE
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
+                //if isset $id_brg dalam $pattern_fptree dan >0
                 if(isset($pattern_fptree[$id_brg]) and count($pattern_fptree[$id_brg])>0){
                     $p=$pattern_fptree[$id_brg];
                     $pattern_nama=array();
                     for($ii=0;$ii<count($p);$ii++){
+                        //cek if value count lebihdari sama dengan $nilai_minimum_support
                         if($p[$ii]['count'] >= $nilai_minimum_support){
+                            //true, memasukkan $nama_barang[$p[$ii]['item1']].' : '.$p[$ii]['count'] ke dalam $pattern_nama;
                             $pattern_nama[]=$nama_barang[$p[$ii]['item1']].' : '.$p[$ii]['count'];
                         }
                     }
+                    //pattern label untuk menggabungkan semuanya
                     $pattern_label='';
+                    //if $pattern_nama > 0
                     if(count($pattern_nama) > 0){
                         $pattern_label='{'.implode(', ', $pattern_nama).'}';
-                        //implode berfungsi menggabungkan kembali string
                     }
                     $daftar_conditional_fptree.='
                     <tr>
@@ -386,13 +436,15 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
                     ';
                 }
             }
-            //FREQUENT PATTERN
+            #FREQUENT PATTERN
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
+                //if isset $id_brg dalam $pattern_fptree dan >0
                 if(isset($pattern_fptree[$id_brg]) and count($pattern_fptree[$id_brg])>0){
                     $p=$pattern_fptree[$id_brg];
                     $pattern_nama=array();
-                    for($ii=0;$ii<count($p);$ii++){
+                    for($ii=0; $ii<count($p); $ii++){
+                        //if count pada $pattern_fptree[$id_brg] lebihdari samadengan $nilai_minimum_support
                         if($p[$ii]['count'] >= $nilai_minimum_support){
                             $pattern_nama[]='{'.$nama_barang[$p[$ii]['item1']].', '.$nama_barang[$p[$ii]['item2']].' : '.$p[$ii]['count'].'}';
                         }
@@ -400,7 +452,6 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
                     $pattern_label='';
                     if(count($pattern_nama) > 0){
                         $pattern_label=implode(', ', $pattern_nama);
-                        //implode berfungsi menggabungkan kembali string yang telah dipecahkan
                     }
                     $daftar_frequent_itemset.='
                     <tr>
@@ -411,14 +462,23 @@ if(isset($_POST['submit'])){ //jika isset PROSES (submit) di klik maka"
 
                 }
             }
-
+            #TAMPILAN ASSOCIATION RULE
             $no=0;
             for($i=0;$i<count($pattern_fptree_all);$i++){
                 $id_brg1=$pattern_fptree_all[$i]['item2'];
                 $id_brg2=$pattern_fptree_all[$i]['item1'];
-                //pembulatan nilai support dan confidence sampai 2 digit dibelakang koma
+ 
+                #SUPPORT
+                //nilai support = transaksi yang mengandung A dan B / jumlah keseluruhan transaksi
                 $nilai_support=round($pattern_fptree_all[$i]['count'] / $jumlah_transaksi, 2);
+
+                //CONFIDENCE
+                //nilai support = transaksi yang mengandung A dan B / transaksi yang mengandung A
                 $nilai_confidence=round($pattern_fptree_all[$i]['count'] / $frekuensi[$id_brg1], 2);
+
+                #LIFT RATIO
+                //nilai expected confidence = transaksi yang mengandung B / keseluruhan transaksi
+                // lift ratio = nilai confidence/nilai expected confidence
                 $nilai_expected_confidence=$frekuensi[$id_brg2]/$jumlah_transaksi;
                 $nilai_lift_ratio=round($nilai_confidence/$nilai_expected_confidence, 2);
                 if($nilai_confidence >= $nilai_minimum_confidence and $pattern_fptree_all[$i]['count'] >= $nilai_minimum_support){

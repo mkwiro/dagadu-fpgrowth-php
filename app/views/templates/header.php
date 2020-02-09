@@ -7,7 +7,7 @@
     <title><?= $data['judul'];?></title>
     <link rel="stylesheet" href="<?=BASEURL;?>css/bootstrap.css">
     <style>
-.sidenav {
+/* .sidenav {
   height: 100%;
   width: 189px;
   position: fixed;
@@ -42,4 +42,4 @@
   <a href="<?=BASEURL;?>transaksi" target="_blank">Transaksi</a>
   <a href="<?=BASEURL;?>barang"target="_blank">Barang</a>
   <a href="<?=BASEURL;?>analisa">Analisis</a>
-</div>
+</div> */
