@@ -407,7 +407,6 @@ if(isset($_POST['submit'])){
 
                 }
             }
-            var_dump($nama_barang);
             #TAMPILAN CONDITIONAL FP TREE
             for($i=0;$i<count($frekuensi_sort);$i++){
                 $id_brg=$frekuensi_sort[$i][1];
